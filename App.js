@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-native';
 import { PaperProvider, Button, Card, Chip, Text, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { pickDirectory } from 'react-native-document-picker'
 import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
@@ -60,7 +60,7 @@ export default function App() {
   }
   async function downloadFile(item) {
     await pickDirectory().then((result) => {
-      RNFetchBlob.config({
+      ReactNativeBlobUtil.config({
         addAndroidDownloads : {
             useDownloadManager : true, // <-- this is the only thing required
             notification : true,
