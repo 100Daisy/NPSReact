@@ -161,7 +161,9 @@ export default function App() {
                 </Card.Content>
                 <Card.Actions>
                   <Button mode="contained" onPress={() => downloadFile(item)}>Download</Button>
-                  <Button mode="contained-tonal" onPress={() => Clipboard.setString(item["zRIF"])}>zRIF</Button>
+                  {
+                    item["zRIF"] ? <Button mode="contained-tonal" onPress={() => Clipboard.setString(item["zRIF"])}>zRIF</Button> : null
+                  }
                 </Card.Actions>
             </Card>
             }
