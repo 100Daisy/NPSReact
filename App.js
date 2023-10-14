@@ -3,7 +3,6 @@ import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-
 import { PaperProvider, Button, Card, Chip, Text, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { pickDirectory } from 'react-native-document-picker'
 import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
@@ -13,6 +12,8 @@ import Papa from "papaparse"
 import { useState, useEffect } from 'react';
 
 export default function App() {
+  const dirs = ReactNativeBlobUtil.fs.dirs
+
   const colorScheme = useColorScheme();
   const { theme } = useMaterial3Theme();
   const paperTheme =
@@ -52,33 +53,18 @@ export default function App() {
     setSearchQuery(query)
   };
 
-  function contentURItoPath(contentURI) {
-    // revert url decode
-    contentURI = decodeURIComponent(contentURI)
-    const path = contentURI.replace('content://com.android.externalstorage.documents/tree/primary:', '/storage/emulated/0/');
-    return path
-  }
   async function downloadFile(item) {
-    await pickDirectory().then((result) => {
-      ReactNativeBlobUtil.config({
-        addAndroidDownloads : {
-            useDownloadManager : true, // <-- this is the only thing required
-            notification : true,
-            // Optional, override notification setting (default to true)
-            // Optional, but recommended since android DownloadManager will fail when
-            // the url does not contains a file extension, by default the mime type will be text/plain
-            mime : 'text/plain',
-            description : 'File downloaded by download manager.',
-            path :  contentURItoPath(result.uri) + `/${item["Name"]}.pkg`,
-        }
-      })
-      .fetch('GET', item["PKG direct link"])
-      .then((resp) => {
-        resp.path()
-      })
-    }).catch((err) => {
-      setSnackbarText(err.message)
-      setSnackbar(true)
+    // show all dirs properties
+    ReactNativeBlobUtil.config({
+      addAndroidDownloads : {
+          useDownloadManager : true,
+          notification : true,
+          path :  `${dirs.LegacyDownloadDir}/NPSReact/${item["Name"]}.pkg`,
+      }
+    })
+    .fetch('GET', item["PKG direct link"])
+    .then((resp) => {
+      resp.path()
     })
   }
 
