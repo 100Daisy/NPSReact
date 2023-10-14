@@ -25,8 +25,6 @@ export default function App() {
       // paddingHorizontal: 20,
       backgroundColor: paperTheme.colors.background,
     },
-    item: {
-    },
     chip: {
       flex: 1,
       flexDirection: 'row',
@@ -34,6 +32,9 @@ export default function App() {
     card: {
       borderRadius: 25,
       marginVertical: 10,
+    },
+    snackbar: {
+      backgroundColor: paperTheme.colors.primary,
     }
   });
   const [value, setValue] = useState('PSV');
@@ -54,6 +55,8 @@ export default function App() {
   };
 
   async function downloadFile(item) {
+    setSnackbar(true)
+    setSnackbarText(`Downloading ${item["Name"]}...`)
     // show all dirs properties
     ReactNativeBlobUtil.config({
       addAndroidDownloads : {
