@@ -11,6 +11,8 @@ import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import Papa from "papaparse"
 import { useState, useEffect } from 'react';
 
+import { trigger } from "react-native-haptic-feedback";
+
 export default function App() {
   const dirs = ReactNativeBlobUtil.fs.dirs
 
@@ -55,6 +57,7 @@ export default function App() {
   };
 
   async function downloadFile(item) {
+    trigger('effectClick')
     setSnackbar(true)
     setSnackbarText(`Downloading ${item["Name"]}...`)
     // show all dirs properties
@@ -72,6 +75,7 @@ export default function App() {
   }
 
   function getLatestTSV(console) {
+    trigger('effectClick')
     setSearchQuery('')
     setFilteredData([])
     setFetching(true)
@@ -103,6 +107,7 @@ export default function App() {
           <Appbar.Content title="NoPayStation" onPress={async () => {
             const supported = await Linking.canOpenURL('https://nopaystation.com');
             if (supported) {
+              trigger('effectClick')
               Linking.openURL('https://nopaystation.com')}
             }
           } />
@@ -151,7 +156,7 @@ export default function App() {
                 <Card.Actions>
                   <Button mode="contained" onPress={() => downloadFile(item)}>Download</Button>
                   {
-                    item["zRIF"] ? <Button mode="contained-tonal" onPress={() => Clipboard.setString(item["zRIF"])}>zRIF</Button> : null
+                    item["zRIF"] ? <Button mode="contained-tonal" onPress={() => {Clipboard.setString(item["zRIF"]); trigger('effectClick')}}>zRIF</Button> : null
                   }
                 </Card.Actions>
             </Card>
