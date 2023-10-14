@@ -72,6 +72,11 @@ export default function App() {
     .then((resp) => {
       resp.path()
     })
+    .catch((err) => {
+      trigger('notificationError')
+      setSnackbar(true)
+      setSnackbarText(`Error downloading ${item["Name"]}`)
+    })
   }
 
   function getLatestTSV(console) {
