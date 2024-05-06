@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-native';
-import { PaperProvider, Button, Card, Chip, Text, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
+import { PaperProvider, Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
@@ -24,8 +24,8 @@ export default function App() {
     : { ...MD3LightTheme, colors: theme.light };
   const styles = StyleSheet.create({
     container: {
-      // paddingHorizontal: 20,
       backgroundColor: paperTheme.colors.background,
+      paddingHorizontal: 10,
     },
     chip: {
       flex: 1,
@@ -33,7 +33,7 @@ export default function App() {
     },
     card: {
       borderRadius: 25,
-      marginVertical: 10,
+      marginBottom: 10,
     },
     snackbar: {
       backgroundColor: paperTheme.colors.primary,
@@ -106,9 +106,9 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider style={ styles.container}>
+    <SafeAreaProvider style={styles.container}>
       <PaperProvider theme={paperTheme}>
-        <Appbar.Header style={{ marginHorizontal: 10, marginVertical: 10 }}>
+        <Appbar.Header>
           <Appbar.Content title="NoPayStation" onPress={async () => {
             const supported = await Linking.canOpenURL('https://nopaystation.com');
             if (supported) {
@@ -127,7 +127,7 @@ export default function App() {
             value={value}
             density=''
             onValueChange={getLatestTSV}
-            style={{ marginHorizontal: 10, marginTop: 10, }}
+            style={{ marginBottom: 14, marginTop: 10}}
             buttons={[
               {
                 value: 'PSX',
@@ -144,13 +144,13 @@ export default function App() {
             ]}
           />
           {/* center content of the View to show Activity Indicator at the center of View */}
-        <SafeAreaView style={{ marginHorizontal: 10, height: '100%', flex: 1, justifyContent: 'center'}} >
+        <Surface style={{ backgroundColor: paperTheme.colors.background }} >
           {
             fetching ? <ActivityIndicator animating={fetching} size='large' /> :
             <FlatList
             // if filteredData exists, use it, otherwise use data
             data={filteredData.length > 0 ? filteredData : data}
-            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
             renderItem={({item}) => 
             <Card style={styles.card}>
                 <Card.Title title={item['Name']} subtitle={item["Original Name"] ? item["Original Name"] : item["Title ID"]} />
@@ -169,7 +169,7 @@ export default function App() {
           />
           }
           <StatusBar style="auto" />
-        </SafeAreaView>
+        </Surface>
         <Snackbar onDismiss={() => setSnackbar(false)} style={ styles.snackbar } visible={showSnackbar}>
             {snackbarText}              
         </Snackbar>
