@@ -5,23 +5,23 @@
 
 Created with React Native, featuring Material You design.
 
-NPSReact allows to browse latest games from [NPS database](https://nopaystation.com/).
+NPSReact allows to browse latest games from [NoPayStation](https://nopaystation.com/).
 
-  
 
 ## Piracy Disclaimer
 
-  
+This application is **not affiliated with, endorsed by, or connected to NoPayStation** or any of its contributors.
 
-No Pay Station client do not host content seen in the app and it's intended for users who own legitimate copies of the games and content they wish to download.
+This app is designed solely as a **convenient browser tool** to access publicly available metadata. **We do not host, distribute, or promote pirated content of any kind.**
 
-I do not support piracy or illegal distribution of copyrighted material.
+Users are solely responsible for how they use this application. Downloading or using copyrighted material without proper authorization may violate local, national, or international laws.
 
-Please use this app responsibly and in compliance with all applicable copyright laws.
+By using this app, you agree that:
+- You will only use it to access content you legally own.
+- You understand that accessing copyrighted content without proper rights is illegal.
+- The developers of this app are not liable for any misuse.
 
-Respect the rights of content creators. Thank you.
-
-  
+If you do not agree with these terms, **please do not use this application**.
 
 ## About the code
 
