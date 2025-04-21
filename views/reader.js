@@ -3,32 +3,57 @@ import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-
 import { Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Papa from "papaparse"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { SettingsContext } from '../contexts/SettingsContext';
+import { useRoute } from '@react-navigation/native';
 
 import { trigger } from "react-native-haptic-feedback";
-export default function GamesView() {
-  const [platforms, setPlatforms] = useState([
-    {
-      value: 'PSV',
-      label: 'PSV',
-    },
-    {
-      value: 'PSM',
-      label: 'PSM',
-    },
-    {
-      value: 'PSX',
-      label: 'PSX',
-    },
-    {
-      value: 'PS3',
-      label: 'PS3',
-    },
-    {
-      value: 'PSP',
-      label: 'PSP',
-    },
-  ]);
+export default function ReaderView() {
+  const route = useRoute();
+  const { type } = route.params; // Odczytanie przekazanych parametrów
+  const { selectedPlatforms } = useContext(SettingsContext);
+  const [platforms, setPlatforms] = useState(
+    [
+      {
+        value: 'PSV',
+        label: 'PSV',
+      },
+      {
+        value: 'PSM',
+        label: 'PSM',
+      },
+      {
+        value: 'PSX',
+        label: 'PSX',
+      },
+      {
+        value: 'PS3',
+        label: 'PS3',
+      },
+      {
+        value: 'PSP',
+        label: 'PSP',
+      },
+    ]
+  );
+
+  useEffect(() => {
+    if (selectedPlatforms && selectedPlatforms.length > 0) {
+      const allPlatforms = [
+        { value: 'PSV', label: 'PSV' },
+        { value: 'PSM', label: 'PSM' },
+        { value: 'PSX', label: 'PSX' },
+        { value: 'PS3', label: 'PS3' },
+        { value: 'PSP', label: 'PSP' },
+      ];
+      const filteredPlatforms = allPlatforms.filter(platform =>
+        selectedPlatforms.includes(platform.value)
+      );
+      setPlatforms(filteredPlatforms);
+    }
+  }, [selectedPlatforms]);
+
+
   const dirs = ReactNativeBlobUtil.fs.dirs
 
   const styles = StyleSheet.create({
@@ -41,12 +66,6 @@ export default function GamesView() {
       flex: 1,
       flexDirection: 'row',
     },
-    card: {
-      borderRadius: 25,
-      marginBottom: 10,
-    },
-    snackbar: {
-    }
   });
 
   const [value, setValue] = useState('PSV');
@@ -96,7 +115,7 @@ export default function GamesView() {
     setFilteredData([])
     setFetching(true)
     setValue(console)
-    Papa.parse(`https://nopaystation.com/tsv/${console}_DLCS.tsv`, {
+    Papa.parse(`https://nopaystation.com/tsv/${console}_${type}.tsv`, {
       download: true,
       header: true,
       complete: function(results) {
@@ -139,8 +158,9 @@ export default function GamesView() {
               // if filteredData exists, use it, otherwise use data
               data={filteredData.length > 0 ? filteredData : data}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ gap: 20 }}
               renderItem={({item}) => 
-              <Card style={styles.card}>
+              <Card>
                   <Card.Title title={item['Name']} subtitle={item["Original Name"] ? item["Original Name"] : item["Title ID"]} />
                   <Card.Content style={styles.chip}>
                     <Chip style={{ marginRight:10 }}>{item["Region"]}</Chip>

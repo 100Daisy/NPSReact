@@ -1,22 +1,13 @@
-import { useColorScheme, Linking, StatusBar } from 'react-native';
-import { PaperProvider, Appbar, Portal, Modal, adaptNavigationTheme } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
-import GamesView from './views/games';
+import { PaperProvider, Appbar } from 'react-native-paper';
+import ReaderView from './views/reader';
 import SettingsView from './views/settings';
-import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
-import { useContext, useEffect, useState } from 'react';
-import { trigger } from "react-native-haptic-feedback";
+import { useContext } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import {
-  DarkTheme as NavigationDarkTheme,
-  DefaultTheme as NavigationDefaultTheme,
-} from '@react-navigation/native';
-import DlcsView from './views/dlcs';
 import { SettingsContext, SettingsProvider } from './contexts/SettingsContext';
-import { createStackNavigator } from '@react-navigation/stack';
-
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getTheme } from './lib/themeUtils';
+import * as SystemUI from 'expo-system-ui';
 
 export default function App() {
   return (
@@ -28,67 +19,33 @@ export default function App() {
 
 function MainApp() {
   const Tab = createMaterialBottomTabNavigator();
-  const Stack = createStackNavigator();
+  const Stack = createNativeStackNavigator();
   const { colorScheme, showDlcsTab } = useContext(SettingsContext);
 
-  const getTheme = (scheme) => {
-    const deviceScheme = useColorScheme();
-    const { theme } = useMaterial3Theme();
-    
-    const { LightTheme, DarkTheme } = adaptNavigationTheme({
-      reactNavigationLight: NavigationDefaultTheme,
-      reactNavigationDark: NavigationDarkTheme,
-    });
+  const theme = getTheme(colorScheme);
+  SystemUI.setBackgroundColorAsync(theme.colors.background);
 
-    const CombinedDefaultTheme = {
-      ...MD3LightTheme,
-      ...LightTheme,
-      colors: {
-        ...MD3LightTheme.colors,
-        ...theme.light,
-      },
-      fonts: MD3LightTheme.fonts,
-    };
-    const CombinedDarkTheme = {
-      ...MD3DarkTheme,
-      ...DarkTheme,
-      colors: {
-        ...MD3DarkTheme.colors,
-        ...theme.dark,
-      },
-      fonts: MD3DarkTheme.fonts,
-    };
-    if (scheme === 'System') {
-      return deviceScheme === 'dark'
-        ? { ...MD3DarkTheme, colors: theme.dark }
-        : { ...MD3LightTheme, colors: theme.light };
-    }
-    return scheme === 'Dark' ? CombinedDarkTheme : CombinedDefaultTheme;
-  };
-
-  const currentTheme = getTheme(colorScheme);
-
-  const TabNavigator = () => {
+  const HomeView = () => {
     const navigation = useNavigation();
   
     return (
       <>
         <Appbar.Header>
-          <Appbar.Content
-            title="NoPayStation"
-            onPress={async () => {
-              const supported = await Linking.canOpenURL('https://nopaystation.com');
-              if (supported) {
-                trigger('effectClick');
-                Linking.openURL('https://nopaystation.com');
-              }
-            }} />
+          <Appbar.Content title="NoPayStation" />
           <Appbar.Action icon="cog" onPress={() => navigation.navigate('Settings')} />
         </Appbar.Header>
         <Tab.Navigator>
-          <Tab.Screen name="Games" component={GamesView} options={{ tabBarIcon: 'gamepad-variant' }} />
+          <Tab.Screen 
+            name="Games" 
+            component={ReaderView} 
+            options={{ tabBarIcon: 'gamepad-variant' }}
+            initialParams={{ type: "GAMES" }} />
           {showDlcsTab && (
-            <Tab.Screen name="DLC's" component={DlcsView} options={{ tabBarIcon: 'puzzle' }} />
+            <Tab.Screen 
+            name="DLC's" 
+            component={ReaderView} 
+            options={{ tabBarIcon: 'puzzle' }}
+            initialParams={{ type: "DLCS" }} />
           )}
         </Tab.Navigator>
       </>
@@ -97,17 +54,12 @@ function MainApp() {
   
 
   return (
-    <PaperProvider theme={currentTheme}>
-      <NavigationContainer theme={currentTheme}>
-        <SafeAreaProvider>
-          <Stack.Navigator
-            // screenOptions={{
-            //   animation: 'fade', // inne opcje poniżej 👇
-            // }}
-            >
+    <PaperProvider theme={theme}>
+      <NavigationContainer theme={theme}>
+          <Stack.Navigator>
             <Stack.Screen
               name="Home"
-              component={TabNavigator}
+              component={HomeView}
               options={{ headerShown: false }}
             />
             <Stack.Screen
@@ -116,11 +68,6 @@ function MainApp() {
               options={{
                 header: ({ navigation }) => (
                   <>
-                    <StatusBar
-                      barStyle={currentTheme.dark ? 'light-content' : 'dark-content'}
-                      backgroundColor="transparent"
-                      translucent
-                    />
                     <Appbar.Header>
                       <Appbar.BackAction onPress={() => navigation.goBack()} />
                       <Appbar.Content title="Settings" />
@@ -130,7 +77,6 @@ function MainApp() {
               }}
             />
           </Stack.Navigator>
-        </SafeAreaProvider>
       </NavigationContainer>
     </PaperProvider>
   );
