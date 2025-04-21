@@ -32,13 +32,18 @@ jobs:
           key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-caches-
+      
+      - name: Continuous Native Generation
+        run: npx expo prebuild --no-install
+
       - name: Make Gradlew Executable
         run: cd android && chmod +x ./gradlew
-        # Build Command
-
+        
+      # Build Command
       - name: Build Android Release
         run: |
           cd android && ./gradlew assembleRelease --no-daemon
+
       # Upload to Artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
