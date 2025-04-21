@@ -14,7 +14,9 @@ const SettingsView = () => {
     ];
 
     const handleSavePlatforms = (value) => {
-        updateSetting("platforms", value)
+        const updatedPlatforms = Array.isArray(value) ? value : [value];
+        console.log(updatedPlatforms);
+        updateSetting("selectedPlatforms", updatedPlatforms);
     }
 
     const handleShowDlcsChange = () => {
@@ -25,14 +27,17 @@ const SettingsView = () => {
         updateSetting('colorScheme', value);
     };
     return (
-        <Surface elevation={5} style={styles.main}>
-            {showDlcsTab}
-            <Checkbox.Item 
-                label="Show DLC's tab" 
-                status={showDlcsTab ? 'checked' : 'unchecked'} 
-                onPress={() => handleShowDlcsChange()} 
-            />
-            <Surface style={styles.surface}>
+        <Surface style={styles.main}>
+            <Surface elevation={5} style={styles.surface}>
+            <Text variant="labelLarge">Manage navigation</Text>
+                {showDlcsTab}
+                <Checkbox.Item 
+                    label="Show DLC's tab" 
+                    status={showDlcsTab ? 'checked' : 'unchecked'} 
+                    onPress={() => handleShowDlcsChange()} 
+                />
+            </Surface>
+            <Surface elevation={5} style={styles.surface}>
               <Text variant="labelLarge">Select theme</Text>
               <List.Section>
                   <List.Item
@@ -52,8 +57,8 @@ const SettingsView = () => {
                   />
                 </List.Section>
             </Surface>
-            <Surface style={styles.surface}>
-              <Text variant="labelLarge">Select platforms to be displayed (reload app)</Text>
+            <Surface elevation={5} style={styles.surface}>
+              <Text variant="labelLarge">Select platforms to display</Text>
               <SegmentedButtons
                   value={selectedPlatforms}
                   onValueChange={(value) => handleSavePlatforms(value)}
@@ -61,6 +66,16 @@ const SettingsView = () => {
                   buttons={platforms}
               />
             </Surface>
+                <Button
+                    mode="contained"
+                    onPress={() => {
+                        const githubUrl = "https://github.com/100Daisy/NPSReact";
+                        console.log(`Opening GitHub link: ${githubUrl}`);
+                        // Add logic to open the URL in a browser if needed
+                    }}
+                >
+                    View on GitHub
+                </Button>
         </Surface>
     );
 };
@@ -69,10 +84,8 @@ const styles = StyleSheet.create({
     main: {
       display: 'flex',
       padding: 8,
-      margin: 16,
-      borderRadius: 10,
       gap: 16,
-
+      height: '100%'
     },
     saveButton: {
         marginTop: 20,

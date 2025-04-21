@@ -3,32 +3,54 @@ import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-
 import { Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Papa from "papaparse"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { SettingsContext } from '../contexts/SettingsContext';
 
 import { trigger } from "react-native-haptic-feedback";
 export default function GamesView() {
-  const [platforms, setPlatforms] = useState([
-    {
-      value: 'PSV',
-      label: 'PSV',
-    },
-    {
-      value: 'PSM',
-      label: 'PSM',
-    },
-    {
-      value: 'PSX',
-      label: 'PSX',
-    },
-    {
-      value: 'PS3',
-      label: 'PS3',
-    },
-    {
-      value: 'PSP',
-      label: 'PSP',
-    },
-  ]);
+  const { selectedPlatforms } = useContext(SettingsContext);
+  const [platforms, setPlatforms] = useState(
+    [
+      {
+        value: 'PSV',
+        label: 'PSV',
+      },
+      {
+        value: 'PSM',
+        label: 'PSM',
+      },
+      {
+        value: 'PSX',
+        label: 'PSX',
+      },
+      {
+        value: 'PS3',
+        label: 'PS3',
+      },
+      {
+        value: 'PSP',
+        label: 'PSP',
+      },
+    ]
+  );
+
+  useEffect(() => {
+    if (selectedPlatforms && selectedPlatforms.length > 0) {
+      const allPlatforms = [
+        { value: 'PSV', label: 'PSV' },
+        { value: 'PSM', label: 'PSM' },
+        { value: 'PSX', label: 'PSX' },
+        { value: 'PS3', label: 'PS3' },
+        { value: 'PSP', label: 'PSP' },
+      ];
+      const filteredPlatforms = allPlatforms.filter(platform =>
+        selectedPlatforms.includes(platform.value)
+      );
+      setPlatforms(filteredPlatforms);
+    }
+  }, [selectedPlatforms]);
+
+
   const dirs = ReactNativeBlobUtil.fs.dirs
 
   const styles = StyleSheet.create({
