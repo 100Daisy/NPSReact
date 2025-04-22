@@ -1,4 +1,6 @@
 import { PaperProvider, Appbar } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
+
 import ReaderView from './views/reader';
 import SettingsView from './views/settings';
 import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
@@ -12,6 +14,7 @@ import * as SystemUI from 'expo-system-ui';
 export default function App() {
   return (
     <SettingsProvider>
+      <StatusBar style="auto" />
       <MainApp />
     </SettingsProvider>
   );
@@ -56,27 +59,27 @@ function MainApp() {
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer theme={theme}>
-          <Stack.Navigator>
-            <Stack.Screen
-              name="Home"
-              component={HomeView}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Settings"
-              component={SettingsView}
-              options={{
-                header: ({ navigation }) => (
-                  <>
-                    <Appbar.Header>
-                      <Appbar.BackAction onPress={() => navigation.goBack()} />
-                      <Appbar.Content title="Settings" />
-                    </Appbar.Header>
-                  </>
-                ),
-              }}
-            />
-          </Stack.Navigator>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeView}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsView}
+            options={{
+              header: ({ navigation }) => (
+                <>
+                  <Appbar.Header>
+                    <Appbar.BackAction onPress={() => navigation.goBack()} />
+                    <Appbar.Content title="Settings" />
+                  </Appbar.Header>
+                </>
+              ),
+            }}
+          />
+        </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
   );

@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-native';
 import { Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
 import ReactNativeBlobUtil from 'react-native-blob-util';
@@ -87,6 +86,12 @@ export default function ReaderView() {
   };
 
   async function downloadFile(item) {
+    if (item["PKG direct link"] === "MISSING") {
+      trigger('notificationError')
+      setSnackbar(true)
+      setSnackbarText(`No download link for ${item["Name"]}`)
+      return
+    }
     trigger('effectClick')
     setSnackbar(true)
     setSnackbarText(`Downloading ${item["Name"]}...`)
@@ -132,8 +137,10 @@ export default function ReaderView() {
   function calculateSize(size) { 
     if (size / (1024 * 1024) > 1024) {
       return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
+    } else if (size / 1024 > 1024) {
+      return `${Math.round(size / (1024 * 1024))} MB`
     }
-    return `${Math.round(size / (1024 * 1024))} MB`
+    return `${Math.round(size / 1024)} KB`
   }
 
     return (
@@ -177,10 +184,6 @@ export default function ReaderView() {
             />
             }
           </Surface> 
-        <StatusBar style="auto" />
-        <Snackbar onDismiss={() => setSnackbar(false)} style={ styles.snackbar } visible={showSnackbar}>
-            {snackbarText}              
-        </Snackbar>
         </Surface>
     )
 
