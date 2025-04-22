@@ -1,179 +1,86 @@
+import { PaperProvider, Appbar } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-native';
-import { PaperProvider, Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
-import ReactNativeBlobUtil from 'react-native-blob-util';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 
-import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
-
-
-import Papa from "papaparse"
-import { useState, useEffect } from 'react';
-
-import { trigger } from "react-native-haptic-feedback";
+import ReaderView from './views/reader';
+import SettingsView from './views/settings';
+import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
+import { useContext } from 'react';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { SettingsContext, SettingsProvider } from './contexts/SettingsContext';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { getTheme } from './lib/themeUtils';
+import * as SystemUI from 'expo-system-ui';
 
 export default function App() {
-  const dirs = ReactNativeBlobUtil.fs.dirs
+  return (
+    <SettingsProvider>
+      <StatusBar style="auto" />
+      <MainApp />
+    </SettingsProvider>
+  );
+}
 
-  const colorScheme = useColorScheme();
-  const { theme } = useMaterial3Theme();
-  const paperTheme =
-  colorScheme === 'dark'
-    ? { ...MD3DarkTheme, colors: theme.dark }
-    : { ...MD3LightTheme, colors: theme.light };
-  const styles = StyleSheet.create({
-    container: {
-      backgroundColor: paperTheme.colors.background,
-      paddingHorizontal: 10,
-    },
-    chip: {
-      flex: 1,
-      flexDirection: 'row',
-    },
-    card: {
-      borderRadius: 25,
-      marginBottom: 10,
-    },
-    snackbar: {
-      backgroundColor: paperTheme.colors.primary,
-    }
-  });
-  const [value, setValue] = useState('PSV');
-  const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSnackbar, setSnackbar] = useState(false);
-  const [snackbarText, setSnackbarText] = useState('This is a snackbar');
-  const [fetching, setFetching] = useState(true);
-  const onChangeSearch = (query) => {
-    setFetching(true)
-    const filteredData = data.filter((item) => {
-      return item["Name"].toLowerCase().includes(query.toLowerCase())
-    })
-    setFetching(false)
-    setFilteredData(filteredData)
-    setSearchQuery(query)
-  };
+function MainApp() {
+  const Tab = createMaterialBottomTabNavigator();
+  const Stack = createNativeStackNavigator();
+  const { colorScheme, showDlcsTab } = useContext(SettingsContext);
 
-  async function downloadFile(item) {
-    trigger('effectClick')
-    setSnackbar(true)
-    setSnackbarText(`Downloading ${item["Name"]}...`)
-    // show all dirs properties
-    ReactNativeBlobUtil.config({
-      addAndroidDownloads : {
-          useDownloadManager : true,
-          notification : true,
-          path :  `${dirs.LegacyDownloadDir}/NPSReact/${item["Name"]}.pkg`,
-      }
-    })
-    .fetch('GET', item["PKG direct link"])
-    .then((resp) => {
-      resp.path()
-    })
-    .catch((err) => {
-      trigger('notificationError')
-      setSnackbar(true)
-      setSnackbarText(`Error downloading ${item["Name"]}`)
-    })
-  }
+  const theme = getTheme(colorScheme);
+  SystemUI.setBackgroundColorAsync(theme.colors.background);
 
-  function getLatestTSV(console) {
-    trigger('effectClick')
-    setSearchQuery('')
-    setFilteredData([])
-    setFetching(true)
-    setValue(console)
-    Papa.parse(`https://nopaystation.com/tsv/${console}_GAMES.tsv`, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        setData(results.data)
-        setFetching(false)
-      }
-    })
-  }
+  const HomeView = () => {
+    const navigation = useNavigation();
   
-  useEffect(() => {
-    getLatestTSV('PSV')
-  }, []);
-  function calculateSize(size) { 
-    if (size / (1024 * 1024) > 1024) {
-      return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
-    }
-    return `${Math.round(size / (1024 * 1024))} MB`
-  }
+    return (
+      <>
+        <Appbar.Header>
+          <Appbar.Content title="NoPayStation" />
+          <Appbar.Action icon="cog" onPress={() => navigation.navigate('Settings')} />
+        </Appbar.Header>
+        <Tab.Navigator>
+          <Tab.Screen 
+            name="Games" 
+            component={ReaderView} 
+            options={{ tabBarIcon: 'gamepad-variant' }}
+            initialParams={{ type: "GAMES" }} />
+          {showDlcsTab && (
+            <Tab.Screen 
+            name="DLC's" 
+            component={ReaderView} 
+            options={{ tabBarIcon: 'puzzle' }}
+            initialParams={{ type: "DLCS" }} />
+          )}
+        </Tab.Navigator>
+      </>
+    );
+  };
+  
 
   return (
-    <SafeAreaProvider style={styles.container}>
-      <PaperProvider theme={paperTheme}>
-        <Appbar.Header>
-          <Appbar.Content title="NoPayStation" onPress={async () => {
-            const supported = await Linking.canOpenURL('https://nopaystation.com');
-            if (supported) {
-              trigger('effectClick')
-              Linking.openURL('https://nopaystation.com')}
-            }
-          } />
-          <Searchbar
-            placeholder="Search"
-            onChangeText={onChangeSearch}
-            value={searchQuery}
-            style={{ width: '50%' }}
+    <PaperProvider theme={theme}>
+      <NavigationContainer theme={theme}>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeView}
+            options={{ headerShown: false }}
           />
-        </Appbar.Header>
-        <SegmentedButtons
-            value={value}
-            density=''
-            onValueChange={getLatestTSV}
-            style={{ marginBottom: 14, marginTop: 10}}
-            buttons={[
-              {
-                value: 'PSX',
-                label: 'PSX',
-              },
-              {
-                value: 'PSV',
-                label: 'PSV',
-              },
-              {
-                value: 'PSP',
-                label: 'PSP',
-              },
-            ]}
+          <Stack.Screen
+            name="Settings"
+            component={SettingsView}
+            options={{
+              header: ({ navigation }) => (
+                <>
+                  <Appbar.Header>
+                    <Appbar.BackAction onPress={() => navigation.goBack()} />
+                    <Appbar.Content title="Settings" />
+                  </Appbar.Header>
+                </>
+              ),
+            }}
           />
-          {/* center content of the View to show Activity Indicator at the center of View */}
-        <Surface style={{ backgroundColor: paperTheme.colors.background }} >
-          {
-            fetching ? <ActivityIndicator animating={fetching} size='large' /> :
-            <FlatList
-            // if filteredData exists, use it, otherwise use data
-            data={filteredData.length > 0 ? filteredData : data}
-            showsVerticalScrollIndicator={false}
-            renderItem={({item}) => 
-            <Card style={styles.card}>
-                <Card.Title title={item['Name']} subtitle={item["Original Name"] ? item["Original Name"] : item["Title ID"]} />
-                <Card.Content style={styles.chip}>
-                  <Chip style={{ marginRight:10 }}>{item["Region"]}</Chip>
-                  <Chip>{calculateSize(item["File Size"])}</Chip>
-                </Card.Content>
-                <Card.Actions>
-                  <Button mode="contained" onPress={() => downloadFile(item)}>Download</Button>
-                  {
-                    item["zRIF"] ? <Button mode="contained-tonal" onPress={() => {Clipboard.setString(item["zRIF"]); trigger('effectClick')}}>zRIF</Button> : null
-                  }
-                </Card.Actions>
-            </Card>
-            }
-          />
-          }
-          <StatusBar style="auto" />
-        </Surface>
-        <Snackbar onDismiss={() => setSnackbar(false)} style={ styles.snackbar } visible={showSnackbar}>
-            {snackbarText}              
-        </Snackbar>
-      </PaperProvider>
-    </SafeAreaProvider>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
