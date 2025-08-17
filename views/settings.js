@@ -1,28 +1,55 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { StyleSheet, Linking } from 'react-native';
-import { Checkbox, Surface, SegmentedButtons, IconButton, Text, List, Icon } from 'react-native-paper';
+import { StyleSheet, Linking, ScrollView, Platform } from 'react-native';
+import { Checkbox, Surface, SegmentedButtons, IconButton, Text, List, Icon, TextInput } from 'react-native-paper';
 import { SettingsContext } from '../contexts/SettingsContext';
 
 const SettingsView = ({ navigation }) => {
-    const { showDlcsTab, selectedPlatforms, theme, updateSetting } = useContext(SettingsContext);
+    const { showDlcsTab, selectedPlatforms, theme, serverUrl, updateSetting } = useContext(SettingsContext);
 
     // Local state for instant UI updates
     const [localShowDlcsTab, setLocalShowDlcsTab] = useState(showDlcsTab);
     const [localSelectedPlatforms, setLocalSelectedPlatforms] = useState(selectedPlatforms);
     const [localTheme, setLocalTheme] = useState(theme);
+    const [localServerUrl, setLocalServerUrl] = useState(serverUrl);
 
     // Save settings when exiting the screen
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
             updateSetting('showDlcsTab', localShowDlcsTab);
             updateSetting('selectedPlatforms', localSelectedPlatforms);
+            updateSetting('serverUrl', localServerUrl);
         });
 
         return unsubscribe;
-    }, [navigation, localShowDlcsTab, localSelectedPlatforms, localTheme, updateSetting]);
+    }, [navigation, localShowDlcsTab, localSelectedPlatforms, localTheme, localServerUrl, updateSetting]);
+
+    // Handle browser back button (web only)
+    useEffect(() => {
+        if (Platform.OS === 'web') {
+            const handleBrowserBack = (event) => {
+                // Save settings before navigating back
+                updateSetting('showDlcsTab', localShowDlcsTab);
+                updateSetting('selectedPlatforms', localSelectedPlatforms);
+                updateSetting('serverUrl', localServerUrl);
+                
+                // Navigate back in the app
+                navigation.goBack();
+            };
+
+            // Add popstate listener for browser back button
+            window.addEventListener('popstate', handleBrowserBack);
+
+            // Push a new state when entering settings to enable back navigation
+            window.history.pushState({ page: 'settings' }, 'Settings', window.location.href);
+
+            return () => {
+                window.removeEventListener('popstate', handleBrowserBack);
+            };
+        }
+    }, [navigation, localShowDlcsTab, localSelectedPlatforms, localServerUrl, updateSetting]);
 
     return (
-        <Surface elevation={0} style={styles.main}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
             <Surface style={styles.surface}>
                 <Text variant="labelLarge">Manage navigation</Text>
                 <Checkbox.Item
@@ -78,21 +105,36 @@ const SettingsView = ({ navigation }) => {
                     ]}
                 />
             </Surface>
+            <Surface style={styles.surface}>
+                <Text variant="labelLarge">Server Configuration</Text>
+                <TextInput
+                    label="Server URL"
+                    value={localServerUrl}
+                    onChangeText={setLocalServerUrl}
+                    mode="outlined"
+                    placeholder="http://nopaystation.com"
+                    right={<TextInput.Icon icon="server" />}
+                />
+            </Surface>
             <IconButton
                 icon="github"
                 style={{ alignSelf: 'center' }}
                 mode="contained"
                 onPress={() => Linking.openURL('https://www.github.com/100Daisy/NPSReact')}
             />    
-        </Surface>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    main: {
+    container: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    contentContainer: {
         padding: 8,
         gap: 20,
-        height: '100%',
+        paddingBottom: 50, // Extra padding at bottom for last element
     },
     surface: {
         padding: 16,

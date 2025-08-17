@@ -1,16 +1,12 @@
-import { StyleSheet, FlatList, Clipboard, useColorScheme, Linking } from 'react-native';
+import { StyleSheet, FlatList, useColorScheme, Linking, Platform } from 'react-native';
 import { Button, Card, Chip, Searchbar, Appbar, Snackbar, SegmentedButtons, ActivityIndicator, Surface } from 'react-native-paper';
-import ReactNativeBlobUtil from 'react-native-blob-util';
 import Papa from "papaparse"
 import { useState, useEffect, useContext } from 'react';
 import { SettingsContext } from '../contexts/SettingsContext';
-import { useRoute } from '@react-navigation/native';
-
-import { trigger } from "react-native-haptic-feedback";
-export default function ReaderView() {
-  const route = useRoute();
-  const { type } = route.params; // Odczytanie przekazanych parametrów
-  const { selectedPlatforms } = useContext(SettingsContext);
+import { copyToClipboard, triggerHapticFeedback, downloadFile, fetchData } from '../lib/platformUtils';
+export default function ReaderView({ route }) {
+  const type = route?.params?.type || "GAMES";
+  const { selectedPlatforms, serverUrl } = useContext(SettingsContext);
   const [platforms, setPlatforms] = useState(
     [
       {
@@ -52,19 +48,23 @@ export default function ReaderView() {
     }
   }, [selectedPlatforms]);
 
-
-  const dirs = ReactNativeBlobUtil.fs.dirs
-
   const styles = StyleSheet.create({
     container: {
       paddingHorizontal: 10,
       display: 'flex',
       gap: 10,
+      ...(Platform.OS === 'web' && { height: '100vh' })
     },
     chip: {
       flex: 1,
       flexDirection: 'row',
     },
+    listContainer: {
+      ...(Platform.OS === 'web' && { 
+        height: 'calc(100vh - 200px)', // Odejmujemy wysokość search bar i segmented buttons
+        overflow: 'auto'
+      })
+    }
   });
 
   const [value, setValue] = useState('PSV');
@@ -85,42 +85,34 @@ export default function ReaderView() {
     setSearchQuery(query)
   };
 
-  async function downloadFile(item) {
+  async function downloadGameFile(item) {
     if (item["PKG direct link"] === "MISSING") {
-      trigger('notificationError')
+      triggerHapticFeedback()
       setSnackbar(true)
       setSnackbarText(`No download link for ${item["Name"]}`)
       return
     }
-    trigger('effectClick')
+    triggerHapticFeedback()
     setSnackbar(true)
     setSnackbarText(`Downloading ${item["Name"]}...`)
-    // show all dirs properties
-    ReactNativeBlobUtil.config({
-      addAndroidDownloads : {
-          useDownloadManager : true,
-          notification : true,
-          path :  `${dirs.LegacyDownloadDir}/NPSReact/${item["Name"]}.pkg`,
-      }
-    })
-    .fetch('GET', item["PKG direct link"])
-    .then((resp) => {
-      resp.path()
-    })
-    .catch((err) => {
-      trigger('notificationError')
+    
+    try {
+      await downloadFile(item["PKG direct link"], `${item["Name"]}.pkg`);
+      setSnackbarText(`Downloaded ${item["Name"]} successfully!`)
+    } catch (err) {
+      triggerHapticFeedback()
       setSnackbar(true)
       setSnackbarText(`Error downloading ${item["Name"]}`)
-    })
+    }
   }
 
   function getLatestTSV(console) {
-    trigger('effectClick')
+    triggerHapticFeedback()
     setSearchQuery('')
     setFilteredData([])
     setFetching(true)
     setValue(console)
-    Papa.parse(`https://nopaystation.com/tsv/${console}_${type}.tsv`, {
+    Papa.parse(`${serverUrl}/tsv/${console}_${type}.tsv`, {
       download: true,
       header: true,
       complete: function(results) {
@@ -158,14 +150,15 @@ export default function ReaderView() {
             style={{ marginBottom: 14, marginTop: 10}}
             buttons={platforms}
           />
-          <Surface elevation={0} mode='flat'> 
+          <Surface elevation={0} mode='flat' style={styles.listContainer}> 
             {
               fetching ? <ActivityIndicator animating={fetching} size='large' /> :
               <FlatList
               // if filteredData exists, use it, otherwise use data
               data={filteredData.length > 0 ? filteredData : data}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ gap: 20 }}
+              contentContainerStyle={{ gap: 20, ...(Platform.OS === 'web' && { minHeight: '100%' }) }}
+              style={Platform.OS === 'web' ? { height: '100%' } : {}}
               renderItem={({item}) => 
               <Card>
                   <Card.Title title={item['Name']} subtitle={item["Original Name"] ? item["Original Name"] : item["Title ID"]} />
@@ -174,9 +167,9 @@ export default function ReaderView() {
                     <Chip>{calculateSize(item["File Size"])}</Chip>
                   </Card.Content>
                   <Card.Actions>
-                    <Button mode="contained" onPress={() => downloadFile(item)}>Download</Button>
+                    <Button mode="contained" onPress={() => downloadGameFile(item)}>Download</Button>
                     {
-                      item["zRIF"] ? <Button mode="contained-tonal" onPress={() => {Clipboard.setString(item["zRIF"]); trigger('effectClick')}}>zRIF</Button> : null
+                      item["zRIF"] ? <Button mode="contained-tonal" onPress={() => {copyToClipboard(item["zRIF"]); triggerHapticFeedback()}}>zRIF</Button> : null
                     }
                   </Card.Actions>
               </Card>

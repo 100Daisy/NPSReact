@@ -1,10 +1,10 @@
-import { PaperProvider, Appbar } from 'react-native-paper';
+import { PaperProvider, Appbar, BottomNavigation } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
+import React from 'react';
 
 import ReaderView from './views/reader';
 import SettingsView from './views/settings';
-import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { SettingsContext, SettingsProvider } from './contexts/SettingsContext';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -21,7 +21,6 @@ export default function App() {
 }
 
 function MainApp() {
-  const Tab = createMaterialBottomTabNavigator();
   const Stack = createNativeStackNavigator();
   const { colorScheme, showDlcsTab } = useContext(SettingsContext);
 
@@ -30,6 +29,20 @@ function MainApp() {
 
   const HomeView = () => {
     const navigation = useNavigation();
+    const [index, setIndex] = useState(0);
+    
+    const routes = [
+      { key: 'games', title: 'Games', focusedIcon: 'gamepad-variant' },
+      ...(showDlcsTab ? [{ key: 'dlcs', title: "DLC's", focusedIcon: 'puzzle' }] : [])
+    ];
+
+    const GamesScene = () => <ReaderView route={{ params: { type: "GAMES" } }} />;
+    const DLCsScene = () => <ReaderView route={{ params: { type: "DLCS" } }} />;
+
+    const renderScene = BottomNavigation.SceneMap({
+      games: GamesScene,
+      ...(showDlcsTab ? { dlcs: DLCsScene } : {})
+    });
   
     return (
       <>
@@ -37,20 +50,11 @@ function MainApp() {
           <Appbar.Content title="NoPayStation" />
           <Appbar.Action icon="cog" onPress={() => navigation.navigate('Settings')} />
         </Appbar.Header>
-        <Tab.Navigator>
-          <Tab.Screen 
-            name="Games" 
-            component={ReaderView} 
-            options={{ tabBarIcon: 'gamepad-variant' }}
-            initialParams={{ type: "GAMES" }} />
-          {showDlcsTab && (
-            <Tab.Screen 
-            name="DLC's" 
-            component={ReaderView} 
-            options={{ tabBarIcon: 'puzzle' }}
-            initialParams={{ type: "DLCS" }} />
-          )}
-        </Tab.Navigator>
+        <BottomNavigation
+          navigationState={{ index, routes }}
+          onIndexChange={setIndex}
+          renderScene={renderScene}
+        />
       </>
     );
   };
